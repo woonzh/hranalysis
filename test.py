@@ -7,24 +7,40 @@ Created on Fri Sep 21 16:33:23 2018
 
 import pandas as pd
 import matplotlib.pyplot as mp
+import matplotlib.image as mpimg
 from sklearn import preprocessing as pp
-import math
 
 info={}
+
+def openGraph(store, col):
+    img = mpimg.imread(store[col])
+    mp.imshow(img)
+    mp.show()
+
+def plotgraph(df):
+    store={}
+    for col in list(df):
+        if col != 'Attrition':
+            mp.scatter(df[col], df['Attrition'])
+            path='graphs/'+col+'.png'
+            mp.savefig(path)
+            store[col]=path
+    return store
 
 def cleanTable(df):
     global info
     transformations={}
-    d=list(df.select_dtypes(include=['object']))
+    df2=df.copy()
+    d=list(df2.select_dtypes(include=['object']))
     for i in d:
-        tem=df[i].astype('category')
+        tem=df2[i].astype('category')
         le=pp.LabelEncoder()
         le.fit(tem)
-        df[i]=le.transform(tem)
+        df2[i]=le.transform(tem)
         transformations[i]=le
     
     info['transformations']=transformations
-    return df
+    return df2
 
 def findNan(df):
     return df!=df
@@ -32,27 +48,33 @@ def findNan(df):
 def filterCorr(df):
     global info
     #find corr
-    cor=abs(df.corr()['Attrition'])
+    store=pd.DataFrame()
+    store['cor']=df.corr()['Attrition']
+    store['abs cor']=abs(store['cor'])
+    cor=df.corr()['Attrition']
+    store=store.sort_values(by=['abs cor'], ascending=False)
+    cor=store['abs cor']
     
     #remove Nan columns
     nans=findNan(cor)
     removedColumns=list(nans[nans==True].index)
-    df=df.drop(removedColumns,axis=1)
+    df2=df.drop(removedColumns,axis=1)
     
     #remove low corr columns
-    tem=list(cor[cor<0.01].index)
+    tem=list(cor[cor<0.1].index)
     removedColumns+=tem
-    df=df.drop(tem, axis=1)
+    df2=df.drop(tem, axis=1)
     
     info['removed columns']=removedColumns
-    return df
+    return df2,store
 
 def dataCleanse(df):
-    df=cleanTable(df)
-    df=filterCorr(df)
+    df2=cleanTable(df)
+    df2, cor=filterCorr(df2)
     
-    return df
+    return df2, cor
         
 fname='Dataset - Human Resource.csv'
 df=pd.read_csv(fname)
-df2=dataCleanse(df)
+df2, cor=dataCleanse(df)
+graphs=plotgraph(df)
