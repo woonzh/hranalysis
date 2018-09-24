@@ -18,6 +18,7 @@ valpercen=0.2
 testpercen=0
 datasets={}
 
+#Split dataset for training and testing
 def splitSets(df):
     global datasets
     df2=shuffle(df)
@@ -42,14 +43,15 @@ def splitSets(df):
     
     return datasets
 
+#training log model
 def trainLogisticsModel(train, train_labels):
     logreg = LogisticRegression()
     logreg.fit(train, train_labels)
     return logreg
 
-def getAccuracy(model, test, test_label):
+#get test result
+def getAccuracy(model, test, test_label, threshold):
     pred = model.predict_proba(test)
-    threshold=0.6
     pred=np.array(pred)[:,1]
     pred=(pred>threshold).astype(int)
     
@@ -74,16 +76,12 @@ def getAccuracy(model, test, test_label):
     
     return [abs_table,percen_table]
 
-def train(df):
+def train(df, threshold=0.5):
     splitSets(df)
     print('datasets split')
     model=trainLogisticsModel(datasets['trainx'], datasets['trainy'])
     print('model trained')
-    results = getAccuracy(model, datasets['valx'],datasets['valy'])
+    results = getAccuracy(model, datasets['valx'],datasets['valy'], threshold)
 #    print('score: '+str(score))
     
-    return results
-
-df=pd.read_csv('Dataset - Human Resource.csv')
-leandf, converteddf, cor, info, rawcorr = dataclean.dataCleanse(df)
-results=train(converteddf)
+    return model, results

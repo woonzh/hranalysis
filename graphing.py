@@ -108,7 +108,7 @@ def plot_corr(df,size, path):
     
 def corrgraph(df):
     X = df.corr().values
-    d = sch.distance.pdist(X)   # vector of ('55' choose 2) pairwise distances
+    d = sch.distance.pdist(X)   
     L = sch.linkage(d, method='complete')
     ind = sch.fcluster(L, 0.5*d.max(), 'distance')
     columns = [df.columns.tolist()[i] for i in list((np.argsort(ind)))]
